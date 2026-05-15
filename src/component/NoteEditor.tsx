@@ -1,0 +1,314 @@
+import { useState, useEffect } from "react";
+import { api, Note } from "@/lib/api";
+import ReactMarkdown from "react-markdown";
+import {
+    Type,
+    Eye,
+    Edit3,
+    Hash,
+    Image as ImageIcon,
+    Link as LinkIcon,
+    MoreHorizontal,
+    Share2,
+    Lock,
+    Globe,
+    Sparkles,
+    RefreshCcw,
+    Check,
+    Plus
+} from "lucide-react";
+import { Button } from "@/component/ui/button";
+import { Badge } from "@/component/ui/badge";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+    DropdownMenuSeparator
+} from "@/component/ui/dropdown-menu";
+import { toast } from "sonner";
+import {
+    motion,
+    AnimatePresence,
+} from "framer-motion";
+
+interface NoteEditorProps {
+    note: Note;
+    onUpdate: (data: Partial<Note>) => void;
+}
+
+export function NoteEditor({ note, onUpdate }: NoteEditorProps) {
+    const [mode, setMode] = useState<"edit" | "preview">("edit");
+    const [localContent, setLocalContent] = useState(note.content);
+    const [localTitle, setLocalTitle] = useState(note.title);
+    const [isGeneratingTitle, setIsGeneratingTitle] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [isAddingTag, setIsAddingTag] = useState(false);
+    const [newTag, setNewTag] = useState("");
+
+    useEffect(() => {
+        queueMicrotask(() => {
+            setLocalContent(note.content);
+            setLocalTitle(note.title);
+        });
+    }, [note.id]);
+
+
+    const handleSuggestTitle =
+        async () => {
+            if (!localContent.trim()) {
+                toast.error(
+                    "Add some content first!"
+                );
+
+                return;
+            }
+
+            setIsGeneratingTitle(true);
+
+            try {
+                const res =
+                    await api.generateSummary(
+                        note.id
+                    );
+
+                const suggested =
+                    res.data.suggested_title;
+
+                if (suggested) {
+                    setLocalTitle(suggested);
+
+                    await api.updateNote(
+                        note.id,
+                        {
+                            title: suggested,
+                        }
+                    );
+
+                    onUpdate({
+                        title: suggested,
+                    });
+
+                    toast.success(
+                        "AI suggested a new title!"
+                    );
+                }
+            } catch {
+                toast.error(
+                    "Failed to generate title"
+                );
+            } finally {
+                setIsGeneratingTitle(false);
+            }
+        };
+
+    const toolbarItems = [
+        { icon: Hash, label: "H1" },
+        { icon: Type, label: "Text" },
+        { icon: ImageIcon, label: "Image" },
+        { icon: LinkIcon, label: "Link" },
+    ];
+
+    return (
+        <div className="flex flex-col bg-zinc-950">
+            {/* Editor Header */}
+            <div className="px-12 py-16 border-b border-zinc-900 bg-zinc-950/20">
+                <div className="max-w-4xl mx-auto space-y-8">
+                    <div className="flex flex-col md:flex-row md:items-end justify-between gap-10">
+                        <div className="flex-1 relative group">
+                            <textarea
+                                value={localTitle}
+                                onChange={(e) => {
+                                    const value =
+                                        e.target.value;
+
+                                    setLocalTitle(value);
+
+                                    onUpdate({
+                                        title: value,
+                                    });
+                                }}
+                                className="w-full bg-transparent text-5xl md:text-8xl font-black tracking-tighter uppercase focus:outline-none placeholder:text-zinc-900 leading-[0.85] resize-none h-auto min-h-[1em] py-2 overflow-hidden font-display transition-all focus:placeholder:opacity-0"
+                                placeholder="MANIFEST TITLE"
+                                rows={1}
+                                onInput={(e) => {
+                                    const target = e.target as HTMLTextAreaElement;
+                                    target.style.height = "auto";
+                                    target.style.height = `${target.scrollHeight}px`;
+                                }}
+                            />
+                            <button
+                                onClick={handleSuggestTitle}
+                                disabled={isGeneratingTitle}
+                                className="absolute -left-12 top-1 opacity-0 group-hover:opacity-100 transition-opacity p-2 text-primary hover:scale-110 disabled:animate-spin"
+                            >
+                                {isGeneratingTitle ? <RefreshCcw size={20} /> : <Sparkles size={20} />}
+                            </button>
+                        </div>
+
+                        <div className="flex items-center gap-4 pb-4">
+                            <div className="flex bg-zinc-900 border border-zinc-800 rounded-2xl p-1 shadow-2xl backdrop-blur-3xl">
+                                <button
+                                    onClick={() => setMode("edit")}
+                                    className={`px-6 py-2 rounded-xl flex items-center gap-2 text-[10px] font-black transition-all uppercase tracking-widest ${mode === "edit" ? "bg-zinc-800 text-primary border border-zinc-700 shadow-xl" : "text-zinc-500 hover:text-zinc-300"}`}
+                                >
+                                    <Edit3 size={14} /> Design
+                                </button>
+                                <button
+                                    onClick={() => setMode("preview")}
+                                    className={`px-6 py-2 rounded-xl flex items-center gap-2 text-[10px] font-black transition-all uppercase tracking-widest ${mode === "preview" ? "bg-zinc-800 text-primary border border-zinc-700 shadow-xl" : "text-zinc-500 hover:text-zinc-300"}`}
+                                >
+                                    <Eye size={14} /> Reveal
+                                </button>
+                            </div>
+
+                            <DropdownMenu>
+                                <DropdownMenuTrigger className="w-10 h-10 border border-zinc-800 rounded-xl bg-zinc-900 flex items-center justify-center hover:bg-zinc-800 transition-colors focus:outline-none group">
+                                    <MoreHorizontal size={18} className="text-zinc-500 group-hover:text-zinc-300" />
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-64 bg-zinc-900 border border-zinc-800 rounded-2xl p-2 shadow-2xl backdrop-blur-3xl">
+                                    <DropdownMenuItem
+                                        onClick={() => onUpdate({ isPublic: !note.isPublic })}
+                                        className="rounded-xl focus:bg-zinc-800 focus:text-primary font-black uppercase text-[10px] p-3 flex items-center justify-between transition-colors"
+                                    >
+                                        <span>Public Manifest Access</span>
+                                        {note.isPublic ? <Globe size={14} className="text-secondary" /> : <Lock size={14} className="text-zinc-600" />}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        onClick={() => {
+                                            const url = `${window.location.origin}/share/${note.shareId}`;
+                                            navigator.clipboard.writeText(url);
+                                            toast.success("Share link synchronized!");
+                                        }}
+                                        disabled={!note.isPublic}
+                                        className="rounded-xl focus:bg-zinc-800 focus:text-primary font-black uppercase text-[10px] p-3 flex items-center justify-between transition-colors"
+                                    >
+                                        <span>Export Share Protocol</span>
+                                        <Share2 size={14} />
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator className="bg-zinc-800" />
+                                    <DropdownMenuItem
+                                        onClick={() => onUpdate({ isArchived: !note.isArchived })}
+                                        className="rounded-xl focus:bg-destructive/10 focus:text-destructive font-black uppercase text-[10px] p-3 flex items-center justify-between transition-colors text-destructive/80"
+                                    >
+                                        {note.isArchived ? "Restore Node" : "Archive Node"}
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 overflow-x-auto pb-4 scrollbar-hide">
+                        {note.tags.map(tag => (
+                            <Badge key={tag} className="bg-zinc-900 text-zinc-400 border border-zinc-800 py-1.5 px-4 rounded-xl text-[9px] font-black uppercase tracking-widest hover:border-primary/50 hover:text-primary transition-colors cursor-pointer">
+                                #{tag}
+                            </Badge>
+                        ))}
+                        {isAddingTag ? (
+                            <form onSubmit={(e) => {
+                                e.preventDefault();
+                                if (newTag.trim()) {
+                                    const updatedTags = [...new Set([...note.tags, newTag.trim()])];
+                                    onUpdate({ tags: updatedTags });
+                                    setNewTag("");
+                                }
+                                setIsAddingTag(false);
+                            }} className="flex items-center">
+                                <input
+                                    autoFocus
+                                    className="bg-zinc-900 border border-zinc-800 text-[9px] font-black uppercase text-zinc-300 px-3 py-1.5 rounded-lg focus:outline-none focus:border-primary/50 w-24"
+                                    value={newTag}
+                                    onChange={e => setNewTag(e.target.value)}
+                                    onBlur={() => setIsAddingTag(false)}
+                                    placeholder="NEW TAG..."
+                                />
+                            </form>
+                        ) : (
+                            <button
+                                onClick={() => setIsAddingTag(true)}
+                                className="flex items-center gap-1 text-[9px] font-black uppercase tracking-widest text-zinc-600 hover:text-primary transition-all bg-zinc-950 border border-zinc-900 px-3 py-1.5 rounded-lg hover:border-zinc-700"
+                            >
+                                <Plus size={10} className="stroke-[3px]" /> Append Tag
+                            </button>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Editor Content Area */}
+            <div className="flex-1 p-12 overflow-visible">
+                <div className="max-w-4xl mx-auto h-full relative">
+                    <AnimatePresence mode="wait">
+                        {mode === "edit" ? (
+                            <motion.div
+                                key="edit"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="h-full flex flex-col min-h-[500px]"
+                            >
+                                <textarea
+                                    className="w-full h-full bg-transparent text-xl leading-relaxed text-zinc-300 font-medium focus:outline-none resize-none placeholder:text-zinc-900 selection:bg-primary/20 selection:text-primary"
+                                    placeholder="INITIATE NEURAL STREAM DRAFTING..."
+                                    value={localContent}
+                                    onChange={(e) => {
+                                        const value =
+                                            e.target.value;
+
+                                        setLocalContent(value);
+
+                                        onUpdate({
+                                            content: value,
+                                        });
+                                    }}
+                                />
+
+                                {/* Floating Toolbar */}
+                                <div className="absolute bottom-12 left-1/2 -translate-x-1/2 bg-zinc-900/90 backdrop-blur-2xl border border-zinc-800 rounded-3xl p-1.5 flex items-center gap-1.5 z-50 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.8)]">
+                                    {toolbarItems.map((item, i) => (
+                                        <Button key={i} variant="ghost" size="icon" className="w-12 h-12 hover:bg-zinc-800 hover:text-primary rounded-2xl transition-all group border border-transparent hover:border-zinc-700">
+                                            <item.icon size={18} strokeWidth={2.5} />
+                                            <span className="absolute -top-12 bg-zinc-900 text-zinc-300 text-[9px] px-3 py-1.5 rounded-xl border border-zinc-800 font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 pointer-events-none transition-all shadow-2xl">
+                                                {item.label}
+                                            </span>
+                                        </Button>
+                                    ))}
+                                    <div className="w-[1px] h-8 bg-zinc-800 mx-2 rounded-full" />
+                                    <Button
+                                        className="brutal-btn-primary h-12 px-8 min-w-[120px] shadow-none hover:shadow-primary/20 transition-all font-display"
+                                        onClick={() => {
+                                            toast.success("Manifest Synchronized");
+                                        }}
+                                    >
+                                        <>
+                                            <Check
+                                                size={18}
+                                                className="stroke-[3px]"
+                                            />
+
+                                            <span className="text-xs">
+                                                {isSaving
+                                                    ? "Syncing..."
+                                                    : "Finalized"}
+                                            </span>
+                                        </>
+                                    </Button>
+                                </div>
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                key="preview"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="prose prose-invert prose-p:text-zinc-400 prose-headings:text-zinc-100 prose-headings:font-black prose-headings:italic prose-p:font-medium prose-p:text-lg max-w-none prose-pre:bg-zinc-900/50 prose-pre:border prose-pre:border-zinc-800 prose-pre:rounded-3xl prose-hr:border-zinc-900 prose-a:text-primary prose-strong:text-white font-sans"
+                            >
+                                <ReactMarkdown>{localContent || "*Neural stream empty. Initiate input in design mode.*"}</ReactMarkdown>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            </div>
+        </div>
+    );
+}
