@@ -25,8 +25,7 @@ export async function POST(
     if (!note.content || note.content.trim().length < 20) {
       return errorResponse("Note content is too short to summarise");
     }
-
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
     const prompt = `
 You are a helpful assistant. Analyse the following note and respond ONLY with a valid JSON object — no markdown, no explanation, no code fences.
@@ -54,7 +53,8 @@ ${note.content}
     };
 
     try {
-      parsed = JSON.parse(raw);
+      const cleanRaw = raw.replace(/```json/gi, "").replace(/```/g, "").trim();
+      parsed = JSON.parse(cleanRaw);
     } catch {
       console.error("[AI] Failed to parse Gemini response:", raw);
       return errorResponse("AI returned an unexpected response format", 502);
@@ -81,8 +81,9 @@ ${note.content}
       action_items: updated.actionItems,
       suggested_title: updated.suggestedTitle,
     });
-  } catch (err) {
-    console.error("[POST /notes/:id/generate-summary]", err);
-    return errorResponse("Internal server error", 500);
+  } catch (err: any) {
+    console.error("[AI ERROR]", err);
+    const msg = err.message || "Unknown AI error";
+    return errorResponse(`Neural Core Failure: ${msg}`, 500);
   }
 }

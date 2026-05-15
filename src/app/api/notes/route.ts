@@ -14,11 +14,12 @@ export async function GET(req: NextRequest) {
     const tag = searchParams.get("tag") || "";
     const category = searchParams.get("category") || "";
     const archived = searchParams.get("archived") === "true";
+    const isPublic = searchParams.get("public") === "true";
 
     const notes = await prisma.note.findMany({
       where: {
         userId: user.userId,
-        isArchived: archived,
+        ...(isPublic ? { isPublic: true } : { isArchived: archived }),
         ...(tag && { tags: { has: tag } }),
         ...(category && { category }),
         ...(search && {
@@ -59,8 +60,20 @@ export async function POST(req: NextRequest) {
 
     const { title, content, tags, category } = await req.json();
 
-    if (!title || !content) {
-      return errorResponse("Title and content are required");
+    if (
+      typeof title !== "string"
+    ) {
+      return errorResponse(
+        "Title is required"
+      );
+    }
+
+    if (
+      typeof content !== "string"
+    ) {
+      return errorResponse(
+        "Content is required"
+      );
     }
 
     const note = await prisma.note.create({
