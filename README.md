@@ -2,7 +2,11 @@
 
 **Noxly AI** is a cutting-edge, minimalist note-taking workspace designed for clarity and speed. Powered by Gemini AI, it transforms messy thoughts into structured, actionable insights.
 
+
+## Dashboard Page
 ![Dashboard](./public/Dashboard.png)
+
+## NotesEditor Page
 ![NoteEditor](./public/Notes.png)
 
 ## ✨ Core Features
