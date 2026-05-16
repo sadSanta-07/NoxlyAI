@@ -84,6 +84,6 @@ ${note.content}
   } catch (err: any) {
     console.error("[AI ERROR]", err);
     const msg = err.message || "Unknown AI error";
-    return errorResponse(`Neural Core Failure: ${msg}`, 500);
+    return errorResponse(`AI Processing Error: ${msg}`, 500);
   }
 }

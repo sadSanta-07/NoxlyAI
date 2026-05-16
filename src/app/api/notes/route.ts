@@ -19,13 +19,15 @@ export async function GET(req: NextRequest) {
     const notes = await prisma.note.findMany({
       where: {
         userId: user.userId,
-        ...(isPublic ? { isPublic: true } : { isArchived: archived }),
+        ...(isPublic ? { isPublic: true, isArchived: false } : { isArchived: archived }),
         ...(tag && { tags: { has: tag } }),
         ...(category && { category }),
         ...(search && {
           OR: [
             { title: { contains: search, mode: "insensitive" } },
             { content: { contains: search, mode: "insensitive" } },
+            { category: { contains: search, mode: "insensitive" } },
+            { tags: { has: search } },
           ],
         }),
       },

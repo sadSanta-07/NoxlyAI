@@ -14,8 +14,10 @@ export default function AIPage() {
       <div className="flex flex-1 flex-col">
         <Navbar />
 
-        <div className="flex-1 p-6">
-          <AISidebar note={null} />
+        <div className="flex-1 min-h-0 relative">
+          <div className="absolute inset-0">
+            <AISidebar note={null} />
+          </div>
         </div>
       </div>
     </div>

@@ -26,16 +26,13 @@ export default function HomePage() {
 
   const router = useRouter();
 
-  const token =
-    useAuthStore(
-      (s) => s.token
-    );
+  const { token, _hasHydrated } = useAuthStore();
 
   useEffect(() => {
-    if (!token) {
+    if (_hasHydrated && !token) {
       router.push("/auth");
     }
-  }, [token, router]);
+  }, [_hasHydrated, token, router]);
 
   useEffect(() => {
     const handleKeyDown = (

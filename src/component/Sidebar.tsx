@@ -113,7 +113,7 @@ export function Sidebar() {
             animate={{ opacity: 1 }}
             className="font-display text-2xl font-black italic uppercase tracking-tighter"
           >
-            Peblo AI
+            Noxly AI
           </motion.span>
         )}
       </div>
@@ -138,60 +138,63 @@ export function Sidebar() {
 
       <nav className="scrollbar-hide flex-1 space-y-1.5 overflow-y-auto px-4">
         {menuItems.map((item) => {
-          const isActive =
-            pathname === item.path;
+          const isActive = pathname === item.path || (item.path !== "/" && pathname?.startsWith(item.path));
 
           return (
             <Link
               key={item.path}
               href={item.path}
+              className="relative"
             >
               <div
                 className={cn(
-                  "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all",
-
+                  "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-300",
                   isActive
-                    ? "border border-zinc-800 bg-zinc-900 text-zinc-50"
-                    : "text-zinc-500 hover:bg-zinc-900/50 hover:text-zinc-300",
-
-                  collapsed &&
-                  "justify-center px-0 py-3"
+                    ? "text-zinc-50"
+                    : "text-zinc-500 hover:text-zinc-300",
+                  collapsed && "justify-center px-0 py-3"
                 )}
               >
+                {/* Background Highlight */}
+                {isActive && (
+                  <motion.div
+                    layoutId="sidebar-highlight"
+                    className="absolute inset-0 bg-zinc-900/80 border border-zinc-800 rounded-xl -z-10 shadow-[0_0_15px_rgba(0,0,0,0.5)]"
+                    initial={false}
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  />
+                )}
+
                 <item.icon
                   className={cn(
-                    "h-5 w-5",
-
+                    "h-5 w-5 transition-all duration-300",
                     isActive
-                      ? "text-primary"
+                      ? "text-primary drop-shadow-[0_0_8px_rgba(250,204,21,0.4)] scale-110"
                       : "text-zinc-500 group-hover:text-zinc-400"
                   )}
-                  strokeWidth={
-                    isActive ? 2.5 : 2
-                  }
+                  strokeWidth={isActive ? 2.5 : 2}
                 />
 
                 {!collapsed && (
                   <span
                     className={cn(
-                      "text-xs font-black uppercase tracking-wider",
-
+                      "text-xs font-black uppercase tracking-wider font-display transition-all duration-300",
                       isActive
-                        ? "opacity-100"
-                        : "opacity-70"
+                        ? "opacity-100 translate-x-1"
+                        : "opacity-70 group-hover:opacity-100"
                     )}
                   >
                     {item.label}
                   </span>
                 )}
 
-                {isActive &&
-                  !collapsed && (
-                    <motion.div
-                      layoutId="active-indicator"
-                      className="absolute left-0 h-4 w-1 rounded-r-full bg-primary shadow-[0_0_12px_rgba(250,204,21,0.5)]"
-                    />
-                  )}
+                {isActive && !collapsed && (
+                  <motion.div
+                    layoutId="active-indicator"
+                    className="absolute left-[-4px] h-6 w-1 rounded-full bg-primary shadow-[0_0_15px_rgba(250,204,21,0.8)]"
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  />
+                )}
               </div>
             </Link>
           );
@@ -201,51 +204,7 @@ export function Sidebar() {
       {/* FOOTER */}
 
       <div className="mt-auto space-y-4 p-4">
-        {!collapsed && (
-          <div className="brutal-card bg-zinc-900/50 p-4 shadow-sm">
-            <div className="mb-3 flex items-center justify-between">
-              <span className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-zinc-500">
-                <BarChart4
-                  size={12}
-                  className="text-secondary"
-                />
-                Intensity
-              </span>
 
-              <span className="text-[10px] font-black text-secondary">
-                82%
-              </span>
-            </div>
-
-            <div className="flex h-8 items-end gap-1.5">
-              {[
-                0.4,
-                0.7,
-                0.3,
-                1,
-                0.6,
-                0.8,
-                0.2,
-              ].map((v, i) => (
-                <div
-                  key={i}
-                  className={cn(
-                    "flex-1 border border-black transition-all duration-500",
-
-                    v > 0.8
-                      ? "bg-primary"
-                      : v > 0.5
-                        ? "bg-secondary"
-                        : "bg-zinc-700"
-                  )}
-                  style={{
-                    height: `${v * 100}%`,
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* USER CARD */}
 
@@ -263,7 +222,7 @@ export function Sidebar() {
 
           {!collapsed && (
             <div className="min-w-0 flex flex-col">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 font-display">
                 <span className="truncate text-xs font-black uppercase tracking-tight text-zinc-50">
                   {user?.name || "Guest"}
                 </span>
@@ -271,8 +230,8 @@ export function Sidebar() {
                 <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-secondary" />
               </div>
 
-              <span className="text-[10px] font-black uppercase italic tracking-tighter text-zinc-500">
-                Pro Workspace
+              <span className="text-[10px] font-black uppercase italic tracking-tighter text-zinc-500 font-display">
+                Standard Node
               </span>
             </div>
           )}
