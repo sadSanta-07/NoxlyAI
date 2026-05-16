@@ -108,28 +108,29 @@ export function AISidebar({
 
         try {
             if (note) {
-                const res = await api.generateSummary(note.id);
-                pushAI(`Thinking about "${userMsg}" in the context of this note...\n\n${res.data.summary}`);
+                // For context-aware chat, we can use the same AI endpoint with the user message as 'text' 
+                // but we might need a specific 'chat' action. For now, we'll use 'rewrite' as a proxy 
+                // or just provide the context. Let's assume we want the AI to answer based on the note.
+                const res = await api.generateSummary(note.id, "rewrite", `Based on this note, answer this question: ${userMsg}`);
+                pushAI(res.data.result || "I couldn't find a specific answer in your note, but I'm here to help!");
             } else {
-                // Helpful general responses for common greetings and questions
+                // General AI responses
                 const lowMsg = userMsg.toLowerCase();
                 if (lowMsg.includes("hi") || lowMsg.includes("hello") || lowMsg.includes("hey")) {
                     pushAI("Hello! I'm Noxly AI. I'm here to help you manage your workspace. You can ask me to summarize notes, extract tasks, or just brainstorm ideas!");
                 } else if (lowMsg.includes("how are you")) {
                     pushAI("I'm functioning at 100% capacity and ready to assist you! How's your work going today?");
                 } else if (lowMsg.includes("what is ai") || lowMsg.includes("explain ai")) {
-                    pushAI("Artificial Intelligence (AI) is the simulation of human intelligence by machines, especially computer systems. In Noxly, I use AI to help you organize thoughts, summarize content, and turn messy notes into actionable tasks!");
+                    pushAI("Artificial Intelligence (AI) is the simulation of human intelligence by machines. In Noxly, I use AI to help you organize thoughts and turn messy notes into actionable tasks!");
                 } else if (lowMsg.includes("help") || lowMsg.includes("can you help")) {
-                    pushAI("I definitely can! Since you haven't selected a note, I can help you with brainstorming or general productivity tips. For example, do you want to know how to organize your workspace better?");
-                } else if (lowMsg.includes("organize") || lowMsg.includes("workspace")) {
-                    pushAI("Great question! A good workspace starts with categories. You can group your notes into 'Work', 'Personal', or 'Ideas' to keep things clean. Would you like me to help you create some tags?");
+                    pushAI("I definitely can! Select a note to see me in action, or ask me for productivity tips right here.");
                 } else {
-                    pushAI(`I'm listening! I can help you brainstorm or provide general productivity advice. To get deep analysis on your specific projects, just click any note in the sidebar!`);
+                    pushAI(`I'm listening! To get deep analysis on your projects, click any note in the sidebar. Otherwise, I can help with general brainstorming!`);
                 }
             }
         } catch (error: any) {
             toast.error(error.message || "AI failed to respond");
-            pushAI("AI failed to respond. Please try again.");
+            pushAI("I encountered an error while thinking. Please try again!");
         } finally {
             setIsTyping(false);
         }

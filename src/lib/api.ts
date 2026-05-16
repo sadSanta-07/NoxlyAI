@@ -98,9 +98,10 @@ export const api = {
       method: "DELETE",
     }),
 
-  generateSummary: (id: string) =>
-    apiFetch<{ data: AIResult }>(`/api/notes/${id}/generate-summary`, {
+  generateSummary: (id: string, action?: string, text?: string) =>
+    apiFetch<{ data: AIResult & { result?: string } }>(`/api/notes/${id}/generate-summary`, {
       method: "POST",
+      body: JSON.stringify({ action, text }),
     }),
 
   // user
