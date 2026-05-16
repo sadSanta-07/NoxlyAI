@@ -6,7 +6,22 @@ import { Navbar } from "@/component/Navbar";
 
 import { Settings } from "@/views/Settings";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/store/authStore";
+
 export default function SettingsPage() {
+  const router = useRouter();
+  const { token, _hasHydrated } = useAuthStore();
+
+  useEffect(() => {
+    if (_hasHydrated && !token) {
+      router.push("/auth");
+    }
+  }, [_hasHydrated, token, router]);
+
+  if (!token) return null;
+
   return (
     <div className="flex h-screen overflow-hidden bg-zinc-950 text-zinc-50">
       <Sidebar />

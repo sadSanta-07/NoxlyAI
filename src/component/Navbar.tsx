@@ -29,8 +29,7 @@ import {
 } from "@/component/ui/dropdown-menu";
 
 export function Navbar() {
-  const [notificationCount] =
-    useState(3);
+
   const { user, clearAuth } = useAuthStore();
   const [search, setSearch] = useState("");
   const router = useRouter();
@@ -48,8 +47,9 @@ export function Navbar() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && search.trim()) {
-                router.push(`/notes?search=${search}`);
+              if (e.key === "Enter") {
+                const path = search.trim() ? `/notes?search=${encodeURIComponent(search)}` : "/notes";
+                router.push(path);
               }
             }}
           />
@@ -65,19 +65,7 @@ export function Navbar() {
       {/* RIGHT */}
 
       <div className="flex items-center gap-3">
-        {/* NOTIFICATIONS */}
 
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative h-10 w-10 rounded-xl transition-all hover:bg-zinc-900"
-        >
-          <Bell className="h-5 w-5 text-zinc-400" />
-
-          {notificationCount > 0 && (
-            <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full border-2 border-zinc-950 bg-primary shadow-[0_0_8px_rgba(250,204,21,0.5)]" />
-          )}
-        </Button>
 
         {/* AI BUTTON */}
 
