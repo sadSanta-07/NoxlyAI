@@ -177,7 +177,7 @@ export function NoteList({ notes, activeId, onDelete, onAdd }: NoteListProps) {
                                         : "border border-transparent hover:bg-zinc-900/50 hover:border-zinc-800"
                                 )}>
                                     {isActive && (
-                                        <motion.div layoutId="list-active-pill" className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary rounded-r-full shadow-[0_0_12px_rgba(250,204,21,0.5)]" />
+                                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary rounded-r-full shadow-[0_0_12px_rgba(250,204,21,0.5)]" />
                                     )}
                                     <div className="flex items-center gap-3 mb-2">
                                         <FileText size={14} className={isActive ? "text-primary" : "text-zinc-700"} strokeWidth={3} />

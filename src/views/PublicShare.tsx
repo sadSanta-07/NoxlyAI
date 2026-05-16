@@ -88,7 +88,7 @@ export function PublicShare() {
                         }</span>
                     </div>
 
-                    <h1 className="text-6xl md:text-9xl font-black tracking-tighter uppercase leading-[0.8] text-white font-display">
+                    <h1 className="text-4xl sm:text-6xl md:text-9xl font-black tracking-tighter uppercase leading-[0.8] text-white font-display">
                         {note.title}
                     </h1>
 
@@ -101,14 +101,14 @@ export function PublicShare() {
                     </div>
 
                     {/* AI Summary Block - Editorial style */}
-                    <div className="bg-zinc-900/40 backdrop-blur-3xl border border-zinc-800/50 p-10 rounded-[2.5rem] relative overflow-hidden group shadow-2xl">
+                    <div className="bg-zinc-900/40 backdrop-blur-3xl border border-zinc-800/50 p-6 md:p-10 rounded-[1.5rem] md:rounded-[2.5rem] relative overflow-hidden group shadow-2xl">
                         <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Zap className="w-48 h-48 text-primary" strokeWidth={1} />
+                            <Zap className="w-24 h-24 md:w-48 md:h-48 text-primary" strokeWidth={1} />
                         </div>
                         <h3 className="text-[10px] font-black uppercase tracking-[0.4em] mb-6 flex items-center gap-2 text-primary font-display">
                             <Zap size={14} fill="currentColor" /> AI Insight
                         </h3>
-                        <p className="text-2xl font-bold text-zinc-300 relative z-10 leading-tight italic font-display">
+                        <p className="text-lg md:text-2xl font-bold text-zinc-300 relative z-10 leading-tight italic font-display">
                             &ldquo;
                             {note.summary || `A focused exploration of ${note.title.toLowerCase()}, captured and organized with Noxly AI.`}
                             &rdquo;

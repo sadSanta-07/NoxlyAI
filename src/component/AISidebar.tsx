@@ -138,7 +138,7 @@ export function AISidebar({
     return (
         <div className="flex h-full flex-col bg-zinc-950">
             {/* HEADER */}
-            <div className="border-b border-zinc-900 bg-zinc-950/20 p-8">
+            <div className="border-b border-zinc-900 bg-zinc-950/20 p-6 md:p-8">
                 <div className="mb-2 flex items-center space-x-2 text-primary">
                     <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
                     <span className="text-[10px] font-black uppercase tracking-widest font-display">
@@ -206,7 +206,7 @@ export function AISidebar({
                                 </div>
 
                                 <div className={cn(
-                                    "relative max-w-[85%] rounded-2xl border p-5 text-sm font-display transition-all",
+                                    "relative max-w-[85%] rounded-2xl border p-4 md:p-5 text-sm font-display transition-all",
                                     msg.type === "ai" ? "border-zinc-800 bg-zinc-900/50 text-zinc-200" : "border-primary/20 bg-primary/5 text-zinc-400"
                                 )}>
                                     <div className="prose prose-invert prose-p:my-0 prose-p:text-xs prose-p:font-bold prose-p:leading-relaxed prose-li:my-1 prose-li:text-xs prose-strong:text-primary">
@@ -237,9 +237,9 @@ export function AISidebar({
             </ScrollArea>
 
             {/* INPUT FOOTER */}
-            <div className="space-y-6 border-t border-zinc-900 bg-zinc-950/50 p-8 backdrop-blur-3xl">
+            <div className="space-y-6 border-t border-zinc-900 bg-zinc-950/50 p-6 md:p-8 backdrop-blur-3xl">
                 {note && (
-                    <div className="flex gap-3">
+                    <div className="flex flex-col sm:flex-row gap-3">
                         <Button
                             variant="outline"
                             disabled={isTyping}

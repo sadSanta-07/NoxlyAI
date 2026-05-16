@@ -50,11 +50,31 @@ export function NoteEditor({ note, onUpdate }: NoteEditorProps) {
     const [newTag, setNewTag] = useState("");
 
     useEffect(() => {
-        queueMicrotask(() => {
-            setLocalContent(note.content);
-            setLocalTitle(note.title);
-        });
+        setLocalContent(note.content);
+        setLocalTitle(note.title);
+        
+        // Auto-resize textareas on load
+        setTimeout(() => {
+            const textareas = document.querySelectorAll('textarea');
+            textareas.forEach(t => {
+                t.style.height = 'auto';
+                t.style.height = t.scrollHeight + 'px';
+            });
+        }, 0);
     }, [note.id]);
+
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            if (localTitle !== note.title || localContent !== note.content) {
+                onUpdate({
+                    title: localTitle,
+                    content: localContent,
+                });
+            }
+        }, 500);
+
+        return () => clearTimeout(timeout);
+    }, [localTitle, localContent]);
 
 
     const handleSuggestTitle =
@@ -105,12 +125,7 @@ export function NoteEditor({ note, onUpdate }: NoteEditorProps) {
             }
         };
 
-    const toolbarItems = [
-        { icon: Hash, label: "H1" },
-        { icon: Type, label: "Text" },
-        { icon: ImageIcon, label: "Image" },
-        { icon: LinkIcon, label: "Link" },
-    ];
+
 
     return (
         <div className="flex flex-col bg-zinc-950">
@@ -122,20 +137,14 @@ export function NoteEditor({ note, onUpdate }: NoteEditorProps) {
                             <textarea
                                 value={localTitle}
                                 onChange={(e) => {
-                                    const value =
-                                        e.target.value;
-
+                                    const value = e.target.value;
                                     setLocalTitle(value);
-
-                                    onUpdate({
-                                        title: value,
-                                    });
                                 }}
                                 className={cn(
                                     "w-full bg-transparent font-black tracking-tighter uppercase focus:outline-none placeholder:text-zinc-900 leading-[0.85] resize-none h-auto min-h-[1em] py-2 overflow-hidden font-display transition-all focus:placeholder:opacity-0",
-                                    localTitle.length > 40 ? "text-3xl md:text-5xl" : 
-                                    localTitle.length > 20 ? "text-4xl md:text-6xl" : 
-                                    "text-5xl md:text-8xl"
+                                    localTitle.length > 40 ? "text-2xl sm:text-3xl md:text-5xl" : 
+                                    localTitle.length > 20 ? "text-3xl sm:text-4xl md:text-6xl" : 
+                                    "text-4xl sm:text-5xl md:text-8xl"
                                 )}
                                 placeholder="NOTE TITLE"
                                 rows={1}
@@ -274,77 +283,28 @@ export function NoteEditor({ note, onUpdate }: NoteEditorProps) {
             </div>
 
             {/* Editor Content Area */}
-            <div className="flex-1 p-12 overflow-visible">
+            <div className="flex-1 px-4 md:px-12 py-12">
                 <div className="max-w-4xl mx-auto h-full relative">
-                    <AnimatePresence mode="wait">
-                        {mode === "edit" ? (
-                            <motion.div
-                                key="edit"
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                className="h-full flex flex-col min-h-[500px]"
-                            >
-                                <textarea
-                                    className="w-full h-full bg-transparent text-xl leading-relaxed text-zinc-300 font-medium focus:outline-none resize-none placeholder:text-zinc-900 selection:bg-primary/20 selection:text-primary"
-                                    placeholder="Start writing your thoughts..."
-                                    value={localContent}
-                                    onChange={(e) => {
-                                        const value =
-                                            e.target.value;
-
-                                        setLocalContent(value);
-
-                                        onUpdate({
-                                            content: value,
-                                        });
-                                    }}
-                                />
-
-                                {/* Floating Toolbar */}
-                                <div className="absolute bottom-12 left-1/2 -translate-x-1/2 bg-zinc-900/90 backdrop-blur-2xl border border-zinc-800 rounded-3xl p-1.5 flex items-center gap-1.5 z-50 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.8)]">
-                                    {toolbarItems.map((item, i) => (
-                                        <Button key={i} variant="ghost" size="icon" className="w-12 h-12 hover:bg-zinc-800 hover:text-primary rounded-2xl transition-all group border border-transparent hover:border-zinc-700">
-                                            <item.icon size={18} strokeWidth={2.5} />
-                                            <span className="absolute -top-12 bg-zinc-900 text-zinc-300 text-[9px] px-3 py-1.5 rounded-xl border border-zinc-800 font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 pointer-events-none transition-all shadow-2xl">
-                                                {item.label}
-                                            </span>
-                                        </Button>
-                                    ))}
-                                    <div className="w-[1px] h-8 bg-zinc-800 mx-2 rounded-full" />
-                                    <Button
-                                        className="brutal-btn-primary h-12 px-8 min-w-[120px] shadow-none hover:shadow-primary/20 transition-all font-display"
-                                        onClick={() => {
-                                            toast.success("Note Saved");
-                                        }}
-                                    >
-                                        <>
-                                            <Check
-                                                size={18}
-                                                className="stroke-[3px]"
-                                            />
-
-                                            <span className="text-xs uppercase font-black">
-                                                {isSaving
-                                                    ? "Saving..."
-                                                    : "Saved"}
-                                            </span>
-                                        </>
-                                    </Button>
-                                </div>
-                            </motion.div>
-                        ) : (
-                            <motion.div
-                                key="preview"
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                className="prose prose-invert prose-p:text-zinc-400 prose-headings:text-zinc-100 prose-headings:font-black prose-headings:italic prose-p:font-medium prose-p:text-lg max-w-none prose-pre:bg-zinc-900/50 prose-pre:border prose-pre:border-zinc-800 prose-pre:rounded-3xl prose-hr:border-zinc-900 prose-a:text-primary prose-strong:text-white font-sans"
-                            >
-                                <ReactMarkdown>{localContent || "*The canvas is empty. Start typing to begin.*"}</ReactMarkdown>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                    {mode === "edit" ? (
+                        <textarea
+                            className="w-full min-h-[500px] bg-transparent text-xl leading-relaxed text-zinc-300 font-medium focus:outline-none resize-none placeholder:text-zinc-900 selection:bg-primary/20 selection:text-primary font-sans"
+                            placeholder="Start writing your thoughts..."
+                            value={localContent}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                setLocalContent(value);
+                            }}
+                            onInput={(e) => {
+                                const target = e.target as HTMLTextAreaElement;
+                                target.style.height = "auto";
+                                target.style.height = `${target.scrollHeight}px`;
+                            }}
+                        />
+                    ) : (
+                        <div className="prose prose-invert prose-p:text-zinc-400 prose-headings:text-zinc-100 prose-headings:font-black prose-headings:italic prose-p:font-medium prose-p:text-lg max-w-none prose-pre:bg-zinc-900/50 prose-pre:border prose-pre:border-zinc-800 prose-pre:rounded-3xl prose-hr:border-zinc-900 prose-a:text-primary prose-strong:text-white font-sans">
+                            <ReactMarkdown>{localContent || "*The canvas is empty. Start typing to begin.*"}</ReactMarkdown>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

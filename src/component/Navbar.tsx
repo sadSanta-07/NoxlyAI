@@ -34,7 +34,7 @@ export function Navbar() {
   const [search, setSearch] = useState("");
   const router = useRouter();
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-zinc-900 bg-zinc-950/80 px-8 backdrop-blur-md">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-zinc-900 bg-zinc-950/80 px-4 md:px-8 backdrop-blur-md">
       {/* SEARCH */}
 
       <div className="flex max-w-xl flex-1 items-center gap-6">
@@ -54,9 +54,8 @@ export function Navbar() {
             }}
           />
 
-          <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-1 rounded border border-zinc-700 bg-zinc-800 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-tighter text-zinc-500">
+          <div className="absolute right-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 rounded border border-zinc-700 bg-zinc-800 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-tighter text-zinc-500 md:flex">
             <Command size={10} />
-
             <span>K</span>
           </div>
         </div>
@@ -69,12 +68,10 @@ export function Navbar() {
 
         {/* AI BUTTON */}
 
-        <Button className="brutal-btn-primary group h-10 scale-90 px-4 text-xs tracking-tight sm:scale-100">
+        <Button className="brutal-btn-primary group h-10 px-3 text-[10px] sm:px-4 sm:text-xs tracking-tight">
           <Sparkles className="h-4 w-4 group-hover:animate-pulse" />
-
-          <span>
-            Sync Session
-          </span>
+          <span className="hidden sm:inline">Sync Session</span>
+          <span className="sm:hidden">Sync</span>
         </Button>
 
         {/* DIVIDER */}

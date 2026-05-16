@@ -102,18 +102,24 @@ export function Dashboard() {
         fetchData();
     }, []);
 
-    const dynamicChartData = insights?.weeklyActivity.map(item => ({
-        day: new Date(item.date).toLocaleDateString('en-US', { weekday: 'short' }),
-        value: item.count
-    })) || [
-        { day: "Mon", value: 0 },
-        { day: "Tue", value: 0 },
-        { day: "Wed", value: 0 },
-        { day: "Thu", value: 0 },
-        { day: "Fri", value: 0 },
-        { day: "Sat", value: 0 },
-        { day: "Sun", value: 0 },
-    ];
+    const dynamicChartData = Array.isArray(insights?.weeklyActivity) 
+        ? insights.weeklyActivity.map(item => ({
+            day: new Date(item.date).toLocaleDateString('en-US', { weekday: 'short' }),
+            value: item.count
+        })) 
+        : [
+            { day: "Mon", value: 0 },
+            { day: "Tue", value: 0 },
+            { day: "Wed", value: 0 },
+            { day: "Thu", value: 0 },
+            { day: "Fri", value: 0 },
+            { day: "Sat", value: 0 },
+            { day: "Sun", value: 0 },
+        ];
+
+    const weeklyTotal = Array.isArray(insights?.weeklyActivity)
+        ? insights.weeklyActivity.reduce((acc, curr) => acc + curr.count, 0)
+        : 0;
 
     if (loading) return <DashboardSkeleton />;
 
@@ -159,15 +165,9 @@ export function Dashboard() {
             {/* Stats Grid */}
             <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatsCard title="Total Notes" value={insights?.totalNotes || 0} icon={FileText} trend="Total" />
-                <StatsCard title="Weekly Activity" value={
-                    insights?.weeklyActivity?.reduce(
-                        (acc, curr) =>
-                            acc + curr.count,
-                        0
-                    ) || 0
-                } icon={TrendingUp} trend="Weekly" color="secondary" />
+                <StatsCard title="Weekly Activity" value={weeklyTotal} icon={TrendingUp} trend="Weekly" color="secondary" />
                 <StatsCard title="AI Usage" value={insights?.aiUsageCount || 0} icon={Zap} unit="Requests" trend="AI" color="accent" />
-                <StatsCard title="Total Tags" value={insights?.mostUsedTags.length || 0} icon={Sparkles} trend="Tags" color="ai" />
+                <StatsCard title="Total Tags" value={insights?.mostUsedTags?.length || 0} icon={Sparkles} trend="Tags" color="ai" />
             </section>
 
             {/* Main Grid Content */}
@@ -180,7 +180,7 @@ export function Dashboard() {
                             <TrendingUp size={20} className="text-primary" /> Weekly Activity Summary
                         </h2>
                         <div className="brutal-card bg-zinc-900/60 h-72 flex flex-col p-6 rounded-[2rem] border-zinc-800 shadow-xl">
-                            <ResponsiveContainer width="100%" height="100%">
+                            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                                 <BarChart data={dynamicChartData}>
                                     <XAxis
                                         dataKey="day"
@@ -226,7 +226,7 @@ export function Dashboard() {
                     <div className="space-y-6">
                         <h2 className="text-2xl font-black tracking-tight uppercase font-display border-l-4 border-primary pl-4">Most Used Tags</h2>
                         <div className="brutal-card bg-zinc-900/80 p-6 space-y-4 rounded-[2rem] border-zinc-800 shadow-xl">
-                            {insights?.mostUsedTags.length ? (
+                            {insights?.mostUsedTags?.length ? (
                                 insights.mostUsedTags.map((tagData, i) => (
                                     <div
                                         key={tagData.tag}

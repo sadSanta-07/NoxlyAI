@@ -87,8 +87,8 @@ export async function GET(req: NextRequest) {
       aiUsageCount: userData?.aiUsageCount || 0,
       weeklyActivity,
     });
-  } catch (err) {
-    console.error("[GET /insights]", err);
-    return errorResponse("Internal server error", 500);
+  } catch (err: any) {
+    console.error("[GET /insights] CRITICAL ERROR:", err);
+    return errorResponse(err.message || "Internal server error", 500);
   }
 }

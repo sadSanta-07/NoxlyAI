@@ -31,8 +31,8 @@ import { Button } from "@/component/ui/button";
 import { api } from "@/lib/api";
 
 export function Sidebar() {
-  const [collapsed, setCollapsed] =
-    useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const pathname = usePathname();
   const { user, clearAuth } = useAuthStore();
@@ -93,13 +93,26 @@ export function Sidebar() {
   };
 
   return (
-    <motion.aside
-      initial={false}
-      animate={{
-        width: collapsed ? 80 : 280,
-      }}
-      className="relative z-40 flex h-full flex-col border-r border-zinc-900 bg-zinc-950 transition-all duration-300 ease-in-out"
-    >
+    <>
+      {/* Mobile Overlay */}
+      {mobileOpen && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm lg:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      <motion.aside
+        initial={false}
+        animate={{
+          width: collapsed ? 80 : 280,
+          x: typeof window !== "undefined" && window.innerWidth < 1024 && !mobileOpen ? -280 : 0
+        }}
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-zinc-900 bg-zinc-950 transition-all duration-300 ease-in-out lg:relative",
+          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        )}
+      >
       {/* LOGO */}
 
       <div className="mb-4 flex items-center gap-3 p-6">
@@ -157,12 +170,7 @@ export function Sidebar() {
               >
                 {/* Background Highlight */}
                 {isActive && (
-                  <motion.div
-                    layoutId="sidebar-highlight"
-                    className="absolute inset-0 bg-zinc-900/80 border border-zinc-800 rounded-xl -z-10 shadow-[0_0_15px_rgba(0,0,0,0.5)]"
-                    initial={false}
-                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                  />
+                  <div className="absolute inset-0 bg-zinc-900 border border-zinc-800 rounded-xl -z-10 shadow-[0_0_15px_rgba(0,0,0,0.5)]" />
                 )}
 
                 <item.icon
@@ -240,18 +248,23 @@ export function Sidebar() {
 
       {/* COLLAPSE BUTTON */}
 
+      {/* COLLAPSE BUTTON (Desktop Only) */}
       <button
-        onClick={() =>
-          setCollapsed(!collapsed)
-        }
-        className="absolute -right-3 top-1/2 z-50 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-lg border border-zinc-800 bg-black text-zinc-500 transition-all hover:border-primary hover:text-primary active:scale-90"
+        onClick={() => setCollapsed(!collapsed)}
+        className="absolute -right-3 top-1/2 z-50 hidden h-6 w-6 -translate-y-1/2 items-center justify-center rounded-lg border border-zinc-800 bg-black text-zinc-500 transition-all hover:border-primary hover:text-primary active:scale-90 lg:flex"
       >
-        {collapsed ? (
-          <ChevronRight size={14} />
-        ) : (
-          <ChevronLeft size={14} />
-        )}
+        {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
       </button>
-    </motion.aside>
+
+      </motion.aside>
+
+      {/* Mobile Toggle Trigger (Hidden on Desktop) */}
+      <button
+        onClick={() => setMobileOpen(!mobileOpen)}
+        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-black bg-primary shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all lg:hidden"
+      >
+        <LayoutDashboard className="h-6 w-6 text-black" />
+      </button>
+    </>
   );
 }

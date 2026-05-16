@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect width="100" height="100" rx="20" fill="black"/>
+
+  <path
+    d="M28 75V25H40L65 58V25H75V75H63L38 42V75Z"
+    fill="#FACC15"
+    stroke="black"
+    stroke-width="3"
+  />
+</svg>

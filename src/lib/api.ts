@@ -26,9 +26,7 @@ async function apiFetch<T>(endpoint: string, options?: RequestInit): Promise<T> 
     );
   }
 
-  if (!res.ok) {
-    throw new Error(data?.error || "Something went wrong");
-  }
+
 
   return data;
 }

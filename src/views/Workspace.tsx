@@ -93,11 +93,9 @@ export function Workspace() {
     }, [isArchive, isShared, search]);
 
     useEffect(() => {
-        queueMicrotask(() => {
-            if (id) {
-                fetchCurrentNote(id);
-            }
-        });
+        if (id) {
+            fetchCurrentNote(id);
+        }
     }, [id]);
 
     useEffect(() => {
@@ -192,10 +190,10 @@ const handleUpdateNote = (data: Partial<Note>) => {
             <AnimatePresence initial={false}>
                 {isNoteListOpen && (
                     <motion.div
-                        initial={{ width: 0, opacity: 0 }}
-                        animate={{ width: 300, opacity: 1 }}
-                        exit={{ width: 0, opacity: 0 }}
-                        className="border-r border-zinc-900 flex flex-col h-full bg-zinc-950/50 backdrop-blur-3xl"
+                        initial={{ x: -300, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        exit={{ x: -300, opacity: 0 }}
+                        className="fixed inset-y-0 left-0 z-[45] w-[300px] border-r border-zinc-900 flex flex-col h-full bg-zinc-950/95 backdrop-blur-3xl lg:relative lg:inset-auto lg:z-0 lg:translate-x-0"
                     >
                         <NoteList
                             notes={notes}
@@ -215,15 +213,33 @@ const handleUpdateNote = (data: Partial<Note>) => {
                                 router.push(
                                     `/notes/${res.data.id}`
                                 );
+                                if (window.innerWidth < 1024) setIsNoteListOpen(false);
                             }}
                         />
+                        {/* Mobile close button for Note List */}
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="absolute top-4 right-4 lg:hidden"
+                            onClick={() => setIsNoteListOpen(false)}
+                        >
+                            <PanelLeftClose size={16} />
+                        </Button>
                     </motion.div>
                 )}
             </AnimatePresence>
 
+            {/* Mobile Overlay for Note List */}
+            {isNoteListOpen && (
+                <div 
+                    className="fixed inset-0 z-[44] bg-black/60 backdrop-blur-sm lg:hidden"
+                    onClick={() => setIsNoteListOpen(false)}
+                />
+            )}
+
             <div className="flex-1 flex flex-col min-w-0 bg-zinc-950">
                 {/* Editor Toolbar (Local) */}
-                <div className="h-14 border-b border-zinc-900 flex items-center justify-between px-6 bg-zinc-950/80 backdrop-blur-2xl sticky top-0 z-20">
+                <div className="h-14 border-b border-zinc-900 flex items-center justify-between px-4 md:px-6 bg-zinc-950/80 backdrop-blur-2xl sticky top-0 z-20">
                     <div className="flex items-center gap-4">
                         <Button
                             variant="ghost"
@@ -235,9 +251,9 @@ const handleUpdateNote = (data: Partial<Note>) => {
                         </Button>
                         <div className="h-4 w-[1px] bg-zinc-800" />
                         <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 flex items-center gap-2">
-                                <FileText size={12} className="text-primary" />
-                                {currentNote?.title || "Note"}
+                            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 flex items-center gap-2 max-w-[120px] md:max-w-[200px]">
+                                <FileText size={12} className="text-primary shrink-0" />
+                                <span className="truncate">{currentNote?.title || "Note"}</span>
                             </span>
                             <div className="h-1 w-1 rounded-full bg-zinc-800" />
                             <span className={cn(
@@ -322,15 +338,32 @@ const handleUpdateNote = (data: Partial<Note>) => {
             <AnimatePresence initial={false}>
                 {isAISidebarOpen && (
                     <motion.div
-                        initial={{ width: 0, opacity: 0 }}
-                        animate={{ width: 380, opacity: 1 }}
-                        exit={{ width: 0, opacity: 0 }}
-                        className="border-l border-zinc-900 h-full bg-zinc-950/50 backdrop-blur-3xl"
+                        initial={{ x: 400, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        exit={{ x: 400, opacity: 0 }}
+                        className="fixed inset-y-0 right-0 z-[45] w-full max-w-[380px] border-l border-zinc-900 h-full bg-zinc-950/95 backdrop-blur-3xl lg:relative lg:inset-auto lg:z-0 lg:translate-x-0"
                     >
                         <AISidebar note={currentNote} />
+                        {/* Mobile close button for AI */}
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="absolute top-4 left-4 lg:hidden"
+                            onClick={() => setIsAISidebarOpen(false)}
+                        >
+                            <PanelRightClose size={16} />
+                        </Button>
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* Mobile Overlay for AI Sidebar */}
+            {isAISidebarOpen && (
+                <div 
+                    className="fixed inset-0 z-[44] bg-black/60 backdrop-blur-sm lg:hidden"
+                    onClick={() => setIsAISidebarOpen(false)}
+                />
+            )}
         </div>
     );
 }
