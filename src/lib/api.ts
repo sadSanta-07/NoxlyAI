@@ -105,6 +105,13 @@ export const api = {
       method: "POST",
     }),
 
+  // user
+  updateUser: (data: { name: string }) =>
+    apiFetch<{ data: { id: string; name: string; email: string } }>("/api/user", {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
   // insights
   getInsights: () =>
     apiFetch<{

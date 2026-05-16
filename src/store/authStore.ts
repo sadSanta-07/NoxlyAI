@@ -10,8 +10,11 @@ type User = {
 type AuthStore = {
   token: string | null;
   user: User | null;
+  _hasHydrated: boolean;
   setAuth: (token: string, user: User) => void;
   clearAuth: () => void;
+  updateUserName: (name: string) => void;
+  setHasHydrated: (val: boolean) => void;
 };
 
 export const useAuthStore = create<AuthStore>()(
@@ -19,9 +22,19 @@ export const useAuthStore = create<AuthStore>()(
     (set) => ({
       token: null,
       user: null,
+      _hasHydrated: false,
       setAuth: (token, user) => set({ token, user }),
       clearAuth: () => set({ token: null, user: null }),
+      updateUserName: (name) => set((state) => ({ 
+        user: state.user ? { ...state.user, name } : null 
+      })),
+      setHasHydrated: (val) => set({ _hasHydrated: val }),
     }),
-    { name: "peblo-auth" }
+    {
+      name: "noxly-auth",
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
+    }
   )
 );

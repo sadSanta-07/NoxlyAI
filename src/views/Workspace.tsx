@@ -55,6 +55,7 @@ export function Workspace() {
     const [notes, setNotes] = useState<Note[]>([]);
     const [isNoteListOpen, setIsNoteListOpen] = useState(true);
     const [isAISidebarOpen, setIsAISidebarOpen] = useState(false);
+    const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
     const isArchive = pathname?.startsWith("/archive");
     const isShared = pathname?.startsWith("/shared");
@@ -101,70 +102,75 @@ export function Workspace() {
 
     useEffect(() => {
         if (!id && notes.length > 0) {
-            router.push(`/notes/${notes[0].id}`);
+            const query = search ? `?search=${search}` : "";
+            const prefix = isArchive ? "/archive" : isShared ? "/shared" : "/notes";
+            router.push(`${prefix}/${notes[0].id}${query}`);
         }
-    }, [id, notes, router]);
+    }, [id, notes, router, search, isArchive, isShared]);
+
+    const saveNote = async (note: Note) => {
+        setSaveStatus("saving");
+        try {
+            const res = await api.updateNote(note.id, {
+                title: note.title,
+                content: note.content,
+                isPublic: note.isPublic,
+                isArchived: note.isArchived,
+                tags: note.tags,
+                category: note.category,
+            });
+            
+            setNotes(prev => prev.map(n => n.id === res.data.id ? res.data : n));
+            setSaveStatus("saved");
+            setTimeout(() => setSaveStatus("idle"), 2000);
+        } catch (error) {
+            console.error("Autosave failed", error);
+            setSaveStatus("error");
+            toast.error("Failed to sync changes");
+        }
+    };
 
     useEffect(() => {
-  if (!currentNote) return;
+        if (!currentNote) return;
+        
+        const timeout = setTimeout(() => {
+            saveNote(currentNote);
+        }, 1500);
 
-  const timeout = setTimeout(
-    async () => {
-      try {
-        const res =
-          await api.updateNote(
-            currentNote.id,
-            {
-              title: currentNote.title,
-              content: currentNote.content,
-              isPublic: currentNote.isPublic,
-              isArchived: currentNote.isArchived,
-              tags: currentNote.tags,
-            }
-          );
+        return () => clearTimeout(timeout);
+    }, [currentNote?.title, currentNote?.content, currentNote?.tags, currentNote?.isPublic, currentNote?.isArchived, currentNote?.category]);
 
-        setNotes((prev) =>
-          prev.map((n) =>
-            n.id ===
-            res.data.id
-              ? res.data
-              : n
-          )
+
+const handleUpdateNote = (data: Partial<Note>) => {
+    if (!currentNote) return;
+
+    const updatedNote = {
+        ...currentNote,
+        ...data,
+    };
+
+    setCurrentNote(updatedNote);
+
+    setNotes((prev) => {
+        // If the note was archived/unarchived or shared/unshared, 
+        // we might need to remove it from the current view's list
+        if (isArchive && data.isArchived === false) {
+            router.push("/archive");
+            return prev.filter(n => n.id !== currentNote.id);
+        }
+        if (isShared && data.isPublic === false) {
+            router.push("/shared");
+            return prev.filter(n => n.id !== currentNote.id);
+        }
+        if (!isArchive && !isShared && data.isArchived === true) {
+            router.push("/notes");
+            return prev.filter(n => n.id !== currentNote.id);
+        }
+
+        return prev.map((n) =>
+            n.id === currentNote.id ? { ...n, ...data } : n
         );
-      } catch {
-        toast.error(
-          "Autosave failed"
-        );
-      }
-    },
-    1200
-  );
-
-  return () =>
-    clearTimeout(timeout);
-}, [currentNote]);
-
-
-const handleUpdateNote = (
-  data: Partial<Note>
-) => {
-  if (!currentNote) return;
-
-  setCurrentNote({
-    ...currentNote,
-    ...data,
-  });
-
-  setNotes((prev) =>
-    prev.map((n) =>
-      n.id === currentNote.id
-        ? {
-            ...n,
-            ...data,
-          }
-        : n
-    )
-  );
+    });
 };
 
     const handleDeleteNote = async (noteId: string) => {
@@ -181,7 +187,7 @@ const handleUpdateNote = (
     };
 
     return (
-        <div className="flex-1 min-h-0 flex h-full relative overflow-hidden bg-zinc-950">
+        <div className="flex-1 flex relative overflow-hidden bg-zinc-950">
             {/* Left Sidebar: Note List */}
             <AnimatePresence initial={false}>
                 {isNoteListOpen && (
@@ -217,7 +223,7 @@ const handleUpdateNote = (
 
             <div className="flex-1 flex flex-col min-w-0 bg-zinc-950">
                 {/* Editor Toolbar (Local) */}
-                <div className="h-14 border-b border-zinc-900 flex items-center justify-between px-6 bg-zinc-950/50 backdrop-blur-md sticky top-0 z-10">
+                <div className="h-14 border-b border-zinc-900 flex items-center justify-between px-6 bg-zinc-950/80 backdrop-blur-2xl sticky top-0 z-20">
                     <div className="flex items-center gap-4">
                         <Button
                             variant="ghost"
@@ -231,7 +237,18 @@ const handleUpdateNote = (
                         <div className="flex items-center gap-2">
                             <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 flex items-center gap-2">
                                 <FileText size={12} className="text-primary" />
-                                {currentNote?.title || "Project Draft"}
+                                {currentNote?.title || "Note"}
+                            </span>
+                            <div className="h-1 w-1 rounded-full bg-zinc-800" />
+                            <span className={cn(
+                                "text-[9px] font-black uppercase tracking-widest transition-all font-display",
+                                saveStatus === "saving" ? "text-primary animate-pulse" : 
+                                saveStatus === "saved" ? "text-secondary" : 
+                                saveStatus === "error" ? "text-destructive" : "text-zinc-600"
+                            )}>
+                                {saveStatus === "saving" ? "Syncing..." : 
+                                 saveStatus === "saved" ? "Synced" : 
+                                 saveStatus === "error" ? "Sync Failed" : "Idle"}
                             </span>
                         </div>
                     </div>
@@ -247,7 +264,7 @@ const handleUpdateNote = (
                             )}
                         >
                             <Sparkles size={12} className={cn("mr-2", isAISidebarOpen && "animate-pulse")} fill={isAISidebarOpen ? "currentColor" : "none"} />
-                            Neural View
+                            AI View
                         </Button>
                         <div className="h-4 w-[1px] bg-zinc-800" />
                         <Button
@@ -273,8 +290,8 @@ const handleUpdateNote = (
                                     <Sparkles className="w-10 h-10 text-primary relative z-10" />
                                 </div>
                                 <div className="space-y-2">
-                                    <h3 className="text-4xl font-black uppercase italic tracking-tighter font-display">Neural Core Active</h3>
-                                    <p className="text-zinc-500 font-bold uppercase text-[10px] tracking-widest">Select an entity to begin processing.</p>
+                                    <h3 className="text-4xl font-black uppercase italic tracking-tighter font-display text-zinc-100">Ready to write</h3>
+                                    <p className="text-zinc-500 font-bold uppercase text-[10px] tracking-[0.2em] font-display">Select a note or create a new one to start.</p>
                                 </div>
                                 <Button
                                     onClick={async () => {
@@ -293,7 +310,7 @@ const handleUpdateNote = (
                                     }}
                                     className="brutal-btn-primary h-12 px-8 font-display"
                                 >
-                                    Initiate New Stream
+                                    Create New Note
                                 </Button>
                             </div>
                         </div>

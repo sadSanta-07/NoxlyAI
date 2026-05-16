@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { Button } from "@/component/ui/button";
 
@@ -31,10 +31,20 @@ export function Auth() {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
-    const setAuth =
-        useAuthStore(
-            (s) => s.setAuth
-        );
+    const { token, setAuth, _hasHydrated } =
+        useAuthStore();
+
+    useState(() => {
+        if (_hasHydrated && token) {
+            router.push("/");
+        }
+    });
+
+    useEffect(() => {
+        if (_hasHydrated && token) {
+            router.push("/");
+        }
+    }, [_hasHydrated, token, router]);
 
     const handleAuth = async (
         e: React.FormEvent
@@ -106,18 +116,17 @@ export function Auth() {
 
                     <div className="text-center mb-12 space-y-2">
                         <h1 className="text-5xl md:text-6xl font-black tracking-tighter uppercase font-display leading-[0.85]">
-                            {isLogin ? "INITIATE" : "JOIN"} <span className="text-zinc-600 block text-4xl">PROTOCOL</span>
+                            {isLogin ? "WELCOME" : "CREATE"} <span className="text-zinc-600 block text-4xl">{isLogin ? "BACK" : "ACCOUNT"}</span>
                         </h1>
-                        <p className="font-black text-zinc-500 uppercase tracking-[0.3em] text-[8px] italic opacity-50">Unified Neural Intelligence v4.0</p>
                     </div>
 
                     <form onSubmit={handleAuth} className="space-y-8">
                         <div className="space-y-3">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-zinc-600 ml-4">Credential: Email</label>
+                            <label className="text-[10px] font-black uppercase tracking-widest text-zinc-600 ml-4">Email Address</label>
                             <Input
                                 type="email"
                                 required
-                                placeholder="USER@PEBLO.CLOUD"
+                                placeholder="you@example.com"
                                 className="h-14 bg-zinc-950/50 border border-zinc-800 rounded-2xl text-xs font-black tracking-widest uppercase focus-visible:ring-primary/20 focus-visible:border-primary/50 transition-all placeholder:text-zinc-900"
                                 value={email}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
@@ -125,9 +134,10 @@ export function Auth() {
                         </div>
                         {!isLogin && (
                             <div className="space-y-3">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-600 ml-4">Entity: Alias</label>
+                                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-600 ml-4">Full Name</label>
                                 <Input
                                     value={name}
+                                    placeholder="YOUR NAME"
                                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                                         setName(e.target.value)
                                     }
@@ -136,7 +146,7 @@ export function Auth() {
                             </div>
                         )}
                         <div className="space-y-3">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-zinc-600 ml-4">Credential: Key</label>
+                            <label className="text-[10px] font-black uppercase tracking-widest text-zinc-600 ml-4">Password</label>
                             <Input
                                 type="password"
                                 required
@@ -152,35 +162,19 @@ export function Auth() {
                             disabled={loading}
                             className="w-full h-16 brutal-btn-primary text-sm font-black uppercase tracking-widest gap-4 group"
                         >
-                            <span className="font-display text-xl">{loading ? "PROCESSING..." : (isLogin ? "ENGAGE" : "INITIALIZE")}</span>
+                            <span className="font-display text-xl">{loading ? "Wait..." : (isLogin ? "Sign In" : "Sign Up")}</span>
                             <ArrowRight size={20} className="stroke-[3px] group-hover:translate-x-1 transition-transform" />
                         </Button>
                     </form>
 
-                    <div className="mt-12 relative">
-                        <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-zinc-800"></div>
-                        </div>
-                        <div className="relative flex justify-center text-[8px] uppercase font-black tracking-[0.4em]">
-                            <span className="bg-zinc-900 px-6 text-zinc-600">Cross-Sync Protocol</span>
-                        </div>
-                    </div>
 
-                    <div className="mt-8 grid grid-cols-2 gap-4">
-                        <Button variant="outline" className="h-12 border border-zinc-800 bg-zinc-950/50 rounded-2xl font-black uppercase text-[10px] tracking-widest gap-3 hover:bg-zinc-800 hover:text-white transition-all shadow-xl">
-                            <Mail size={16} /> Neural
-                        </Button>
-                        <Button variant="outline" className="h-12 border border-zinc-800 bg-zinc-950/50 rounded-2xl font-black uppercase text-[10px] tracking-widest gap-3 hover:bg-zinc-800 hover:text-white transition-all shadow-xl">
-                            <Code2 size={16} /> Github
-                        </Button>
-                    </div>
 
                     <div className="mt-12 text-center">
                         <button
                             onClick={() => setIsLogin(!isLogin)}
                             className="text-[10px] font-black text-zinc-600 hover:text-primary transition-all cursor-pointer uppercase tracking-widest italic"
                         >
-                            {isLogin ? "No access key? Acquire one here" : "Return to entry protocol"}
+                            {isLogin ? "Don't have an account? Sign up" : "Already have an account? Log in"}
                         </button>
                     </div>
                 </div>

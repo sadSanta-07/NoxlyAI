@@ -71,20 +71,20 @@ export function PublicShare() {
 
                 {/* Editorial Header */}
                 <header className="mb-24 space-y-12 animate-in fade-in slide-in-from-bottom-10 duration-1000">
-                    <div className="flex flex-wrap items-center gap-6 text-zinc-600 font-black uppercase tracking-[0.3em] text-[10px]">
-                        <span className="flex items-center gap-2 border border-zinc-800 px-3 py-1.5 rounded-xl"><Globe size={12} className="text-ai" /> Public Neural Stream</span>
+                    <div className="flex flex-wrap items-center gap-6 text-zinc-600 font-black uppercase tracking-[0.2em] text-[10px] font-display">
+                        <span className="flex items-center gap-2 border border-zinc-800 px-3 py-1.5 rounded-xl bg-zinc-900/50"><Globe size={12} className="text-primary" /> Public Note</span>
                         <span className="flex items-center gap-2"><Clock size={12} /> {note.updatedAt
                             ? new Date(
                                 note.updatedAt
-                            ).toLocaleTimeString()
-                            : "Unknown"}</span>
-                        <span className="flex items-center gap-2"><User size={12} />Architect: {
+                            ).toLocaleDateString()
+                            : "Just Now"}</span>
+                        <span className="flex items-center gap-2"><User size={12} />Created by: {
                             (note as Note & {
                                 user?: {
                                     name?: string;
                                 };
                             })?.user?.name ||
-                            "Anonymous"
+                            "Noxly User"
                         }</span>
                     </div>
 
@@ -101,29 +101,17 @@ export function PublicShare() {
                     </div>
 
                     {/* AI Summary Block - Editorial style */}
-                    <div className="bg-zinc-900/50 backdrop-blur-3xl border border-ai/30 p-10 rounded-[2.5rem] relative overflow-hidden group shadow-2xl">
+                    <div className="bg-zinc-900/40 backdrop-blur-3xl border border-zinc-800/50 p-10 rounded-[2.5rem] relative overflow-hidden group shadow-2xl">
                         <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Zap className="w-48 h-48 text-ai" strokeWidth={1} />
+                            <Zap className="w-48 h-48 text-primary" strokeWidth={1} />
                         </div>
-                        <h3 className="text-[10px] font-black uppercase tracking-[0.4em] italic mb-6 flex items-center gap-2 text-ai">
-                            <Zap size={14} fill="currentColor" /> Neural Synopsis
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.4em] mb-6 flex items-center gap-2 text-primary font-display">
+                            <Zap size={14} fill="currentColor" /> AI Insight
                         </h3>
                         <p className="text-2xl font-bold text-zinc-300 relative z-10 leading-tight italic font-display">
                             &ldquo;
-                            {note.title.toLowerCase()}
-                            &rdquo;:
-                            AN EXPLORATION INTO
-                            HIGH-DIMENSIONAL
-                            CREATIVE
-                            SYNCHRONIZATION
-                            THROUGH NEURAL
-                            WORKSPACE
-                            INTERFACES.
-
-                            MAPPING NEW
-                            COGNITIVE NODES
-                            FOR RAPID IDEA
-                            SYNTHESIS.
+                            {note.summary || `A focused exploration of ${note.title.toLowerCase()}, captured and organized with Noxly AI.`}
+                            &rdquo;
                         </p>
                     </div>
                 </header>
@@ -136,11 +124,11 @@ export function PublicShare() {
                 {/* Footer CTA */}
                 <footer className="border-t border-zinc-900 pt-20 flex flex-col md:flex-row items-center justify-between gap-12">
                     <div className="space-y-3">
-                        <h4 className="text-3xl font-black uppercase tracking-tighter font-display">POWERED BY <span className="text-primary italic">PEBLO AI</span></h4>
-                        <p className="font-black text-zinc-600 uppercase tracking-widest text-[10px]">The neural workspace for high-performance creative units.</p>
+                        <h4 className="text-3xl font-black uppercase tracking-tighter font-display">BUILT WITH <span className="text-primary italic">NOXLY AI</span></h4>
+                        <p className="font-black text-zinc-600 uppercase tracking-widest text-[10px] font-display">The professional workspace for organized thinkers.</p>
                     </div>
                     <Link href="/auth" className="brutal-btn-primary h-18 px-12 text-sm shadow-none hover:shadow-primary/20 transition-all font-display">
-                        <span className="text-xl">JOIN PROTOCOL</span> <ArrowRight size={24} className="stroke-[3.3px] ml-4" />
+                        <span className="text-xl">GET STARTED</span> <ArrowRight size={24} className="stroke-[3.3px] ml-4" />
                     </Link>
                 </footer>
             </div>
@@ -167,18 +155,19 @@ function PublicShareSkeleton() {
 
 function PublicShareError() {
     return (
-        <div className="min-h-screen bg-[#050505] flex items-center justify-center p-8 text-center">
-            <div className="brutal-card max-w-md border-4 border-accent space-y-6">
-                <div className="w-20 h-20 bg-accent text-white border-4 border-black rounded-3xl mx-auto flex items-center justify-center shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
-                    <Zap size={40} className="rotate-12" />
+        <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-8 text-center">
+            <div className="max-w-md space-y-8">
+                <div className="w-20 h-20 bg-zinc-900 border border-zinc-800 rounded-[2rem] mx-auto flex items-center justify-center shadow-2xl">
+                    <Zap size={40} className="text-primary" />
                 </div>
-                <h2 className="text-4xl font-black uppercase italic tracking-tighter">404: Idea Not Found</h2>
-                <p className="font-bold text-zinc-500 uppercase tracking-widest text-sm">
-                    This note might be private or it does not exist anymore.
-                    The creative flow has moved elsewhere.
-                </p>
-                <Link href="/" className="w-full h-14 border-4 border-black bg-white text-black font-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] transition-all flex items-center justify-center gap-2">
-                    <ArrowLeft size={18} /> GO TO PEBLO
+                <div className="space-y-2">
+                    <h2 className="text-4xl font-black uppercase italic tracking-tighter font-display text-zinc-100">Note not found</h2>
+                    <p className="font-black text-zinc-500 uppercase tracking-widest text-[10px] font-display">
+                        This note might be private or it does not exist anymore.
+                    </p>
+                </div>
+                <Link href="/" className="brutal-btn-primary h-14 w-full flex items-center justify-center gap-2 font-display">
+                    <ArrowLeft size={18} className="stroke-[3px]" /> GO TO NOXLY
                 </Link>
             </div>
         </div>
