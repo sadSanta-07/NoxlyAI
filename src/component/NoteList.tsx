@@ -22,7 +22,16 @@ import {
     Calendar,
     FileText,
     Globe,
+    SortAsc,
+    SortDesc,
 } from "lucide-react";
+
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/component/ui/dropdown-menu";
 
 import { cn } from "@/lib/utils";
 
@@ -36,35 +45,116 @@ interface NoteListProps {
 export function NoteList({ notes, activeId, onDelete, onAdd }: NoteListProps) {
     const [filter, setFilter] = useState("");
     const pathname = usePathname();
+    const [sortBy, setSortBy] = useState<"latest" | "oldest">("latest");
+    const [tagFilter, setTagFilter] = useState<string | null>(null);
+    const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
 
-    const filteredNotes = notes.filter(n =>
-        n.title.toLowerCase().includes(filter.toLowerCase()) ||
-        n.content.toLowerCase().includes(filter.toLowerCase())
-    );
+    const allTags = Array.from(new Set(notes.flatMap(n => n.tags)));
+    const allCategories = Array.from(new Set(notes.map(n => n.category).filter(Boolean))) as string[];
+
+    const filteredNotes = notes
+        .filter(n => {
+            const matchesSearch = n.title.toLowerCase().includes(filter.toLowerCase()) ||
+                                 n.content.toLowerCase().includes(filter.toLowerCase());
+            const matchesTag = !tagFilter || n.tags.includes(tagFilter);
+            const matchesCategory = !categoryFilter || n.category === categoryFilter;
+            return matchesSearch && matchesTag && matchesCategory;
+        })
+        .sort((a, b) => {
+            const timeA = new Date(a.updatedAt).getTime();
+            const timeB = new Date(b.updatedAt).getTime();
+            return sortBy === "latest" ? timeB - timeA : timeA - timeB;
+        });
 
     return (
         <div className="flex flex-col h-full bg-zinc-950">
             <div className="p-8 border-b border-zinc-900 bg-zinc-950/20">
                 <div className="flex items-center justify-between mb-8">
-                        <h2 className="text-2xl font-black uppercase tracking-tighter italic font-display">
-                            {pathname.startsWith("/archive") ? "The Vault" : pathname.startsWith("/shared") ? "Public Hub" : "Manifests"}
+                        <h2 className="text-2xl font-black uppercase tracking-tighter italic font-display text-zinc-100">
+                            {pathname.startsWith("/archive") ? "The Vault" : pathname.startsWith("/shared") ? "Public Hub" : "Your Notes"}
                         </h2>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-600">
-                            {pathname.startsWith("/shared") ? "Public Clusters" : "Neural Clusters"}: {notes.length}
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 font-display">
+                            {pathname.startsWith("/shared") ? "Public Hub" : "Count"}: {notes.length}
                         </p>
                     <Button onClick={onAdd} size="icon" className="w-10 h-10 rounded-xl brutal-btn-primary p-0 rotate-3 hover:rotate-0 transition-transform">
                         <Plus size={20} className="stroke-[3px]" />
                     </Button>
                 </div>
-                <div className="relative group">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-primary transition-colors" />
-                    <Input
-                        placeholder="FILTER NODES..."
-                        className="pl-10 bg-zinc-900/50 border border-zinc-800 rounded-xl h-12 text-xs font-black uppercase tracking-widest focus-visible:ring-primary/20 focus-visible:border-primary/50 transition-all"
-                        value={filter}
-                        onChange={(e) => setFilter(e.target.value)}
-                    />
+                <div className="flex items-center gap-2">
+                    <div className="relative group flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-600 group-focus-within:text-primary transition-colors" />
+                        <Input
+                            placeholder="Search content..."
+                            className="pl-9 bg-zinc-900/50 border border-zinc-800 rounded-xl h-10 text-[10px] font-black uppercase tracking-widest focus-visible:ring-primary/20 focus-visible:border-primary/50 transition-all font-display"
+                            value={filter}
+                            onChange={(e) => setFilter(e.target.value)}
+                        />
+                    </div>
+                    
+                    <DropdownMenu>
+                        <DropdownMenuTrigger className="w-10 h-10 border border-zinc-800 rounded-xl bg-zinc-900 flex items-center justify-center hover:bg-zinc-800 transition-colors focus:outline-none text-zinc-500">
+                            {sortBy === "latest" ? <SortDesc size={16} /> : <SortAsc size={16} />}
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="bg-zinc-900 border border-zinc-800 rounded-2xl p-2 shadow-2xl backdrop-blur-xl">
+                            <DropdownMenuItem onClick={() => setSortBy("latest")} className="rounded-xl p-3 text-[10px] font-black uppercase font-display flex items-center justify-between">
+                                Latest First <SortDesc size={12} className={sortBy === "latest" ? "text-primary" : "text-zinc-600"} />
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setSortBy("oldest")} className="rounded-xl p-3 text-[10px] font-black uppercase font-display flex items-center justify-between">
+                                Oldest First <SortAsc size={12} className={sortBy === "oldest" ? "text-primary" : "text-zinc-600"} />
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
+
+                <div className="flex items-center gap-2 mt-4 overflow-x-auto pb-2 scrollbar-hide no-scrollbar">
+                    <button
+                        onClick={() => setTagFilter(null)}
+                        className={cn(
+                            "px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border transition-all whitespace-nowrap font-display",
+                            !tagFilter ? "bg-primary text-black border-primary" : "bg-zinc-900 text-zinc-500 border-zinc-800 hover:border-zinc-700"
+                        )}
+                    >
+                        All Tags
+                    </button>
+                    {allTags.map(tag => (
+                        <button
+                            key={tag}
+                            onClick={() => setTagFilter(tag)}
+                            className={cn(
+                                "px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border transition-all whitespace-nowrap font-display",
+                                tagFilter === tag ? "bg-primary text-black border-primary" : "bg-zinc-900 text-zinc-500 border-zinc-800 hover:border-zinc-700"
+                            )}
+                        >
+                            #{tag}
+                        </button>
+                    ))}
+                </div>
+
+                {allCategories.length > 0 && (
+                    <div className="flex items-center gap-2 mt-2 overflow-x-auto pb-2 scrollbar-hide no-scrollbar">
+                        <button
+                            onClick={() => setCategoryFilter(null)}
+                            className={cn(
+                                "px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border transition-all whitespace-nowrap font-display",
+                                !categoryFilter ? "bg-secondary text-black border-secondary" : "bg-zinc-900 text-zinc-500 border-zinc-800 hover:border-zinc-700"
+                            )}
+                        >
+                            All Categories
+                        </button>
+                        {allCategories.map(cat => (
+                            <button
+                                key={cat}
+                                onClick={() => setCategoryFilter(cat)}
+                                className={cn(
+                                    "px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border transition-all whitespace-nowrap font-display",
+                                    categoryFilter === cat ? "bg-secondary text-black border-secondary" : "bg-zinc-900 text-zinc-500 border-zinc-800 hover:border-zinc-700"
+                                )}
+                            >
+                                {cat}
+                            </button>
+                        ))}
+                    </div>
+                )}
             </div>
 
             <ScrollArea className="flex-1 px-4">
@@ -92,20 +182,20 @@ export function NoteList({ notes, activeId, onDelete, onAdd }: NoteListProps) {
                                     <div className="flex items-center gap-3 mb-2">
                                         <FileText size={14} className={isActive ? "text-primary" : "text-zinc-700"} strokeWidth={3} />
                                         <h3 className={cn(
-                                            "font-black truncate text-xs flex-1 uppercase tracking-wider",
+                                            "font-black truncate text-xs flex-1 uppercase tracking-wider font-display",
                                             isActive ? "text-white" : "text-zinc-500 group-hover:text-zinc-300"
                                         )}>
-                                            {note.title || "UNTITLED MANIFEST"}
+                                            {note.title || "UNTITLED NOTE"}
                                         </h3>
                                     </div>
                                         <div className="flex items-center gap-3">
-                                            <div className="flex items-center gap-1.5 text-[9px] font-black text-zinc-700 uppercase tracking-widest">
+                                            <div className="flex items-center gap-1.5 text-[9px] font-black text-zinc-700 uppercase tracking-widest font-display">
                                                 <Calendar size={10} />
                                                 {note.updatedAt
                                                     ? new Date(
                                                         note.updatedAt
                                                     ).toLocaleDateString()
-                                                    : "Unknown"}
+                                                    : "Just Now"}
                                             </div>
                                             {note.isPublic && (
                                                 <div className="flex items-center gap-1.5 text-[9px] font-black text-secondary uppercase tracking-widest">
@@ -142,8 +232,10 @@ export function NoteList({ notes, activeId, onDelete, onAdd }: NoteListProps) {
                                 <Search size={20} className="text-zinc-700" />
                             </div>
                             <div className="space-y-1">
-                                <p className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] italic">No Neural Data Found</p>
-                                <Button variant="link" onClick={() => setFilter("")} className="text-primary p-0 h-auto font-black uppercase text-[10px] tracking-widest">Reset Filter</Button>
+                                <p className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] italic font-display">
+                                    {pathname.startsWith("/archive") ? "The Vault is Empty" : "No Notes Found"}
+                                </p>
+                                <Button variant="link" onClick={() => setFilter("")} className="text-primary p-0 h-auto font-black uppercase text-[10px] tracking-widest font-display">Reset Filter</Button>
                             </div>
                         </div>
                     )}
