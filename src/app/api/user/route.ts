@@ -8,15 +8,28 @@ export async function PATCH(req: NextRequest) {
     const user = getUserFromRequest(req);
     if (!user) return errorResponse("Unauthorized", 401);
 
-    const { name } = await req.json();
+    const { name, email } = await req.json();
 
-    if (!name || typeof name !== "string") {
-      return errorResponse("Name is required", 400);
+    if (!name && !email) {
+      return errorResponse("Name or email is required", 400);
+    }
+
+    const data: any = {};
+    if (name) data.name = name;
+    if (email) {
+      // Check if email is already taken
+      const existingUser = await prisma.user.findUnique({
+        where: { email },
+      });
+      if (existingUser && existingUser.id !== user.userId) {
+        return errorResponse("Email is already in use", 400);
+      }
+      data.email = email;
     }
 
     const updatedUser = await prisma.user.update({
       where: { id: user.userId },
-      data: { name },
+      data,
       select: {
         id: true,
         name: true,

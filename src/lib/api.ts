@@ -105,7 +105,7 @@ export const api = {
     }),
 
   // user
-  updateUser: (data: { name: string }) =>
+  updateUser: (data: { name?: string; email?: string }) =>
     apiFetch<{ data: { id: string; name: string; email: string } }>("/api/user", {
       method: "PATCH",
       body: JSON.stringify(data),
