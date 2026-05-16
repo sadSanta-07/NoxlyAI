@@ -139,37 +139,61 @@ export function Workspace() {
     }, [currentNote?.title, currentNote?.content, currentNote?.tags, currentNote?.isPublic, currentNote?.isArchived, currentNote?.category]);
 
 
-const handleUpdateNote = (data: Partial<Note>) => {
-    if (!currentNote) return;
+    const handleUpdateNote = async (data: Partial<Note>) => {
+        if (!currentNote) return;
 
-    const updatedNote = {
-        ...currentNote,
-        ...data,
-    };
+        const updatedNote = {
+            ...currentNote,
+            ...data,
+        };
 
-    setCurrentNote(updatedNote);
+        // For structural changes, save immediately
+        if (data.isArchived !== undefined || data.isPublic !== undefined) {
+            setSaveStatus("saving");
+            try {
+                const res = await api.updateNote(currentNote.id, data);
+                const serverNote = res.data;
+                
+                setNotes(prev => {
+                    // Filter out if it no longer belongs in the current view
+                    if (isArchive && serverNote.isArchived === false) return prev.filter(n => n.id !== serverNote.id);
+                    if (!isArchive && serverNote.isArchived === true) return prev.filter(n => n.id !== serverNote.id);
+                    if (isShared && serverNote.isPublic === false) return prev.filter(n => n.id !== serverNote.id);
+                    
+                    return prev.map(n => n.id === serverNote.id ? serverNote : n);
+                });
 
-    setNotes((prev) => {
-        // If the note was archived/unarchived or shared/unshared, 
-        // we might need to remove it from the current view's list
-        if (isArchive && data.isArchived === false) {
-            router.push("/archive");
-            return prev.filter(n => n.id !== currentNote.id);
+                setSaveStatus("saved");
+                setTimeout(() => setSaveStatus("idle"), 2000);
+
+                // Handle Redirects
+                if (!isArchive && serverNote.isArchived) {
+                    router.push("/notes");
+                    setCurrentNote(null);
+                } else if (isArchive && !serverNote.isArchived) {
+                    router.push("/archive");
+                    setCurrentNote(null);
+                } else {
+                    setCurrentNote(serverNote);
+                }
+                
+                toast.success(data.isArchived ? "Note archived" : data.isPublic ? "Note is now public" : "Settings updated");
+            } catch (error) {
+                console.error("Failed to update note settings", error);
+                setSaveStatus("error");
+                toast.error("Failed to save settings");
+            }
+            return;
         }
-        if (isShared && data.isPublic === false) {
-            router.push("/shared");
-            return prev.filter(n => n.id !== currentNote.id);
-        }
-        if (!isArchive && !isShared && data.isArchived === true) {
-            router.push("/notes");
-            return prev.filter(n => n.id !== currentNote.id);
-        }
 
-        return prev.map((n) =>
-            n.id === currentNote.id ? { ...n, ...data } : n
+        // Standard local update (will be debounced for content/title)
+        setCurrentNote(updatedNote);
+        setNotes((prev) =>
+            prev.map((n) =>
+                n.id === currentNote.id ? { ...n, ...data } : n
+            )
         );
-    });
-};
+    };
 
     const handleDeleteNote = async (noteId: string) => {
         try {
