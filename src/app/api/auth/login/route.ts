@@ -27,8 +27,8 @@ export async function POST(req: NextRequest) {
       token,
       user: { id: user.id, name: user.name, email: user.email },
     });
-  } catch (err) {
-    console.error("[LOGIN]", err);
-    return errorResponse("Internal server error", 500);
+  } catch (err: any) {
+    console.error("[LOGIN] CRITICAL ERROR:", err);
+    return errorResponse(err.message || "Internal server error", 500);
   }
 }

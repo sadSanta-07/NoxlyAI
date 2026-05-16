@@ -80,7 +80,8 @@ export function AISidebar({
         pushUser(type === "summary" ? "Summarize this note" : "Extract action items");
 
         try {
-            const res = await api.generateSummary(note.id);
+            // Pass current content from the note prop (which should be updated by parent)
+            const res = await api.generateSummary(note.id, "summarize", undefined, note.content);
             const result = res.data;
 
             if (type === "summary") {
@@ -108,25 +109,13 @@ export function AISidebar({
 
         try {
             if (note) {
-                // For context-aware chat, we can use the same AI endpoint with the user message as 'text' 
-                // but we might need a specific 'chat' action. For now, we'll use 'rewrite' as a proxy 
-                // or just provide the context. Let's assume we want the AI to answer based on the note.
-                const res = await api.generateSummary(note.id, "rewrite", `Based on this note, answer this question: ${userMsg}`);
+                // Use 'chat' action instead of 'rewrite' proxy
+                const res = await api.generateSummary(note.id, "chat", userMsg, note.content);
                 pushAI(res.data.result || "I couldn't find a specific answer in your note, but I'm here to help!");
             } else {
-                // General AI responses
-                const lowMsg = userMsg.toLowerCase();
-                if (lowMsg.includes("hi") || lowMsg.includes("hello") || lowMsg.includes("hey")) {
-                    pushAI("Hello! I'm Noxly AI. I'm here to help you manage your workspace. You can ask me to summarize notes, extract tasks, or just brainstorm ideas!");
-                } else if (lowMsg.includes("how are you")) {
-                    pushAI("I'm functioning at 100% capacity and ready to assist you! How's your work going today?");
-                } else if (lowMsg.includes("what is ai") || lowMsg.includes("explain ai")) {
-                    pushAI("Artificial Intelligence (AI) is the simulation of human intelligence by machines. In Noxly, I use AI to help you organize thoughts and turn messy notes into actionable tasks!");
-                } else if (lowMsg.includes("help") || lowMsg.includes("can you help")) {
-                    pushAI("I definitely can! Select a note to see me in action, or ask me for productivity tips right here.");
-                } else {
-                    pushAI(`I'm listening! To get deep analysis on your projects, click any note in the sidebar. Otherwise, I can help with general brainstorming!`);
-                }
+                // Real AI chat instead of hardcoded responses
+                const res = await api.chat(userMsg);
+                pushAI(res.data.result);
             }
         } catch (error: any) {
             toast.error(error.message || "AI failed to respond");

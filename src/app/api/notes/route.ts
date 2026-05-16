@@ -42,15 +42,17 @@ export async function GET(req: NextRequest) {
         isArchived: true,
         shareId: true,
         summary: true,
+        actionItems: true,
+        suggestedTitle: true,
         createdAt: true,
         updatedAt: true,
       },
     });
 
     return successResponse(notes);
-  } catch (err) {
-    console.error("[GET /notes]", err);
-    return errorResponse("Internal server error", 500);
+  } catch (err: any) {
+    console.error("[GET /notes] CRITICAL ERROR:", err);
+    return errorResponse(err.message || "Internal server error", 500);
   }
 }
 
@@ -83,14 +85,15 @@ export async function POST(req: NextRequest) {
         title,
         content,
         tags: tags || [],
+        actionItems: [], // Explicitly initialize scalar list
         category: category || null,
         userId: user.userId,
       },
     });
 
     return successResponse(note, 201);
-  } catch (err) {
-    console.error("[POST /notes]", err);
-    return errorResponse("Internal server error", 500);
+  } catch (err: any) {
+    console.error("[POST /notes] CRITICAL ERROR:", err);
+    return errorResponse(err.message || "Internal server error", 500);
   }
 }

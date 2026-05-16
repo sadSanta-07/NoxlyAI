@@ -19,14 +19,19 @@ async function apiFetch<T>(endpoint: string, options?: RequestInit): Promise<T> 
   if (!res.ok) {
     console.log("API ERROR:", data);
 
+    if (res.status === 401) {
+      useAuthStore.getState().clearAuth();
+      if (typeof window !== "undefined" && !window.location.pathname.startsWith("/auth")) {
+        window.location.href = "/auth";
+      }
+    }
+
     throw new Error(
       data?.error ||
       data?.message ||
       "Something went wrong"
     );
   }
-
-
 
   return data;
 }
@@ -98,10 +103,16 @@ export const api = {
       method: "DELETE",
     }),
 
-  generateSummary: (id: string, action?: string, text?: string) =>
+  generateSummary: (id: string, action?: string, text?: string, currentContent?: string) =>
     apiFetch<{ data: AIResult & { result?: string } }>(`/api/notes/${id}/generate-summary`, {
       method: "POST",
-      body: JSON.stringify({ action, text }),
+      body: JSON.stringify({ action, text, currentContent }),
+    }),
+
+  chat: (message: string) =>
+    apiFetch<{ data: { result: string } }>("/api/ai", {
+      method: "POST",
+      body: JSON.stringify({ message }),
     }),
 
   // user

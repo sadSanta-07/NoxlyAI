@@ -33,7 +33,7 @@ export async function middleware(req: NextRequest) {
     requestHeaders.set("x-user-email", payload.email);
 
     return NextResponse.next({ request: { headers: requestHeaders } });
-  } catch {
+  } catch (err) {
     return NextResponse.json(
       { success: false, error: "Invalid or expired token" },
       { status: 401 }

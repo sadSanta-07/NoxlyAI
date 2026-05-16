@@ -4,7 +4,14 @@ import { getUserFromRequest } from "@/lib/getUser";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest } from "next/server";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+// Use a getter for the model to ensure env vars are accessed at request time
+function getAIModel() {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY is not configured");
+  const genAI = new GoogleGenerativeAI(apiKey);
+  console.log("[AI] Initializing model: gemini-flash-latest (May 2026)");
+  return genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+}
 
 export async function POST(
   req: NextRequest,
@@ -16,7 +23,7 @@ export async function POST(
 
     const { id } = await params;
     const body = await req.json().catch(() => ({}));
-    const { action = "summarize", text: selectedText } = body;
+    const { action = "summarize", text: selectedText, currentContent } = body;
 
     const note = await prisma.note.findFirst({
       where: { id, userId: user.userId },
@@ -24,13 +31,15 @@ export async function POST(
 
     if (!note) return errorResponse("Note not found", 404);
 
-    const contentToProcess = selectedText || note.content;
+    // Prioritise passed text, then current content from editor, then DB content
+    const contextContent = currentContent || note.content;
+    const contentToProcess = selectedText || contextContent;
 
-    if (!contentToProcess || contentToProcess.trim().length < 5) {
+    if (!contentToProcess || contentToProcess.trim().length < 2) {
       return errorResponse("Content is too short for AI processing");
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = getAIModel();
 
     let prompt = "";
     if (action === "summarize") {
@@ -42,10 +51,24 @@ Analyze the following text and respond ONLY with a valid JSON object.
   "suggested_title": "A short, clear title"
 }
 
-Text:
+Text to analyze:
 """
 ${contentToProcess}
 """
+`.trim();
+    } else if (action === "chat") {
+      prompt = `
+You are a helpful AI assistant. Answer the user's question based on the provided note context.
+If the answer isn't in the context, use your general knowledge but mention it's not in the note.
+
+Note Context:
+"""
+${contextContent}
+"""
+
+User Question: ${selectedText}
+
+Respond naturally in markdown. Keep it concise.
 `.trim();
     } else {
       const actionPrompts: Record<string, string> = {
@@ -68,7 +91,8 @@ ${contentToProcess}
     }
 
     const result = await model.generateContent(prompt);
-    const raw = result.response.text().trim();
+    const response = await result.response;
+    const raw = response.text().trim();
 
     // increment user AI usage count
     await prisma.user.update({
@@ -84,8 +108,10 @@ ${contentToProcess}
       };
 
       try {
-        const cleanRaw = raw.replace(/```json/gi, "").replace(/```/g, "").trim();
-        parsed = JSON.parse(cleanRaw);
+        // More robust JSON extraction
+        const jsonMatch = raw.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) throw new Error("No JSON found");
+        parsed = JSON.parse(jsonMatch[0]);
       } catch {
         console.error("[AI] Failed to parse Gemini response:", raw);
         return errorResponse("AI returned an unexpected response format", 502);

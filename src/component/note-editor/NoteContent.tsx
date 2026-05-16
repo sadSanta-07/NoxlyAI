@@ -42,7 +42,7 @@ export function NoteContent({ content, setContent, mode, noteId }: NoteContentPr
         setIsAILoading(true);
 
         try {
-            const res = await api.generateSummary(noteId, action, selection.text);
+            const res = await api.generateSummary(noteId, action, selection.text, content);
             if (res.data.result) {
                 const newContent = 
                     content.substring(0, selection.start) + 

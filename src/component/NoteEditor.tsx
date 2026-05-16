@@ -44,7 +44,8 @@ export function NoteEditor({ note, onUpdate }: NoteEditorProps) {
 
         setIsGeneratingTitle(true);
         try {
-            const res = await api.generateSummary(note.id);
+            // Pass localContent so the AI uses the latest unsaved changes
+            const res = await api.generateSummary(note.id, "summarize", undefined, localContent);
             const suggested = res.data.suggested_title;
 
             if (suggested) {
