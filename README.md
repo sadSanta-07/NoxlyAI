@@ -75,4 +75,4 @@ Noxly AI follows a modern full-stack architecture:
 
 ---
 
-Designed with ❤️ for thinkers and builders.
+Designed with ❤️ by SAHIL SINGH.

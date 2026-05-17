@@ -1,20 +1,12 @@
 "use client";
 import {
     Settings as SettingsIcon,
-    Zap,
-    Key,
-    Cloud,
-    ChevronRight,
     Sparkles,
     LogOut,
     User as UserIcon,
-    Bell,
-    Shield
 } from "lucide-react";
 import { Button } from "@/component/ui/button";
 import { Input } from "@/component/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/component/ui/tabs";
-import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useState } from "react";
